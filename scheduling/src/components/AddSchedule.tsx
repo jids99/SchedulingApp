@@ -6,13 +6,11 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Button } from "@/components/ui/button"
 
-import { useState } from "react"
 import { format } from "date-fns"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
@@ -77,7 +75,6 @@ const names = [
 
 const AddSchedule = () => {
 
-    const [selectedEvent, setSelectedEvent] = useState("Select Event");
 
     const form = useForm<FormValues>({
         resolver: zodResolver(formSchema),
