@@ -20,7 +20,33 @@ import './App.css'
 import './components/AddSchedule'
 import AddSchedule from "./components/AddSchedule"
 
+import { supabase } from './supabaseClient';
+import { useEffect, useState } from "react"
+
+type Schedule = {
+  schedule_id: number;
+  name: string;
+  event_name: string;
+  schedule_date: string;
+
+};
+
 export default function App() {
+
+  const [schedules, setSchedules] = useState<Schedule[]>([]);
+
+  useEffect(() => {
+    const fetchSchedules = async () => {
+      const { data, error } = await supabase
+        .from<'schedules',Schedule>('schedules')
+        .select();
+
+      if (error) console.error('Error fetching:', error);
+      else setSchedules(data || []);
+    };
+
+    fetchSchedules();
+  }, []);
 
   return (
     <>
@@ -57,19 +83,22 @@ export default function App() {
         <TableRow>
           <TableHead className="w-[100px]">ID</TableHead>
           <TableHead>Name</TableHead>
+          <TableHead>Event Name</TableHead>
           <TableHead>Schedule Date</TableHead>
-          <TableHead>Action</TableHead>
-          <TableHead>Status</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
-        <TableRow>
-          <TableCell className="font-medium">1</TableCell>
-          <TableCell>John</TableCell>
-          <TableCell>2025-08-03</TableCell>
-          <TableCell>Add</TableCell>
-          <TableCell>Active</TableCell>
-        </TableRow>
+        {schedules.map(schedule => (
+          <TableRow key={schedule.schedule_id}>
+            <TableCell> {schedule.schedule_id}</TableCell>
+            <TableCell> {schedule.name}</TableCell>
+            <TableCell> {schedule.event_name}</TableCell>
+            <TableCell> {schedule.schedule_date}</TableCell>
+          </TableRow>
+        ))}
+
+
+       
       </TableBody>
     </Table>
       
