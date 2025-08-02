@@ -37,6 +37,8 @@ import {
   CalendarYearView,
 } from '@/components/ui/full-calendar';
 
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faTrash, faPen } from '@fortawesome/free-solid-svg-icons';
 
 type Schedule = {
   schedule_id: number;
@@ -164,49 +166,56 @@ export default function App() {
           events = {[...selected]}
         >
 
-      <div className="h-svh w-full p-14 flex flex-col">
-        <div className="flex px-6 items-center gap-2 mb-6">
-          <CalendarViewTrigger
-            className="aria-[current=true]:bg-accent"
-            view="day"
-          >
-            Day
-          </CalendarViewTrigger>
-          <CalendarViewTrigger
-            view="week"
-            className="aria-[current=true]:bg-accent"
-          >
-            Week
-          </CalendarViewTrigger>
-          <CalendarViewTrigger
-            view="month"
-            className="aria-[current=true]:bg-accent"
-          >
-            Month
-          </CalendarViewTrigger>
-          <CalendarViewTrigger
-            view="year"
-            className="aria-[current=true]:bg-accent"
-          >
-            Year
-          </CalendarViewTrigger>
+      <div className="h-svh w-full flex flex-col
+                      lg:p-14">
+        <div className="flex flex-col px-6 items-center justify-center gap-2 mb-6
+                lg:flex-row">
 
-          <span className="flex-1" />
 
-          <CalendarCurrentDate />
+            <div className="flex">
+              <CalendarViewTrigger
+                className="aria-[current=true]:bg-accent"
+                view="day"
+              >
+                Day
+              </CalendarViewTrigger>
+              <CalendarViewTrigger
+                view="week"
+                className="aria-[current=true]:bg-accent"
+              >
+                Week
+              </CalendarViewTrigger>
+              <CalendarViewTrigger
+                view="month"
+                className="aria-[current=true]:bg-accent"
+              >
+                Month
+              </CalendarViewTrigger>
+              <CalendarViewTrigger
+                view="year"
+                className="aria-[current=true]:bg-accent"
+              >
+                Year
+              </CalendarViewTrigger>
+            </div>
+            <div className="flex">
+              <CalendarCurrentDate />
+            </div>
+            <div className="flex items-center gap-2">
+              <CalendarPrevTrigger>
+                <ChevronLeft size={20} />
+                <span className="sr-only">Previous</span>
+              </CalendarPrevTrigger>
 
-          <CalendarPrevTrigger>
-            <ChevronLeft size={20} />
-            <span className="sr-only">Previous</span>
-          </CalendarPrevTrigger>
+              <CalendarTodayTrigger>Today</CalendarTodayTrigger>
 
-          <CalendarTodayTrigger>Today</CalendarTodayTrigger>
+              <CalendarNextTrigger>
+                <ChevronRight size={20} />
+                <span className="sr-only">Next</span>
+              </CalendarNextTrigger>
 
-          <CalendarNextTrigger>
-            <ChevronRight size={20} />
-            <span className="sr-only">Next</span>
-          </CalendarNextTrigger>
-
+            </div>
+          
         </div>
 
         <div className="flex-1 px-6 overflow-hidden">
@@ -226,6 +235,7 @@ export default function App() {
           <TableHead>Name</TableHead>
           <TableHead>Event Name</TableHead>
           <TableHead>Schedule Date</TableHead>
+          <TableHead>Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -236,6 +246,32 @@ export default function App() {
             <TableCell> {schedule.name}</TableCell>
             <TableCell> {schedule.event_name}</TableCell>
             <TableCell> {formatDate(schedule.schedule_date)}</TableCell>
+            <TableCell>  
+              <div className='flex gap-2'>
+
+                <Button
+                    // onClick={}
+                    className="px-4 py-2 rounded outline-none 
+                    focus:outline 
+                    focus:outline-2 
+                    focus:outline-blue-500 
+                    focus: text-white
+                    bg-transparent 
+                    text-black-500
+                    rounded"
+                >
+                    <FontAwesomeIcon icon={faPen} />
+                </Button>
+
+                <Button
+                    // onClick={}
+                    className="bg-red-400"
+                >
+                    <FontAwesomeIcon icon={faTrash} />
+                </Button>
+
+            </div>
+            </TableCell>
           </TableRow>
         ))}
 

@@ -382,7 +382,7 @@ const CalendarMonthView = () => {
                         monthEventVariants({ variant: event.color })
                       )}
                     ></div> */}
-                    <span className="flex-1 truncate">{event.title}</span>
+                    <span className="flex-1 text-center truncate">{event.title}</span>
                     {/* <time className="tabular-nums text-muted-foreground/50 text-xs">
                       {format(event.start, 'HH:mm')}
                     </time> */}

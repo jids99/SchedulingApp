@@ -71,8 +71,6 @@ const names = [
     'Adi',
     'John',
 ];
-    
-
 
 const AddSchedule = ({ onAddSuccess }: { onAddSuccess: () => void }) => {
 
@@ -98,8 +96,7 @@ const AddSchedule = ({ onAddSuccess }: { onAddSuccess: () => void }) => {
             event_name: values.eventName,
             schedule_date: values.scheduleDate
         })
-        .select()
-        ; // 👈 insert as array of objects
+        .select();
 
         setLoading(false);
 
