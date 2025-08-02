@@ -51,7 +51,6 @@ export type CalendarEvent = {
   start: Date;
   end: Date;
   title: string;
-  color: string;
 };
 
 // 2. Define Calendar props
@@ -63,7 +62,7 @@ export type CalendarProps = {
 export default function App() {
 
   const [schedules, setSchedules] = useState<Schedule[]>([]);
-  const [eventsArr, setEventsArr] = useState([]);
+  const [eventsArr, setEventsArr] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -82,7 +81,6 @@ export default function App() {
               start: new Date(schedule_date),
               end: new Date(schedule_date),
               title: name,
-              color: "default"
             }
           ));
           console.log('selected ',selected);
@@ -95,23 +93,6 @@ export default function App() {
     fetchSchedules();
   }, []);
   
-  const x: CalendarEvent[] = [
-            {
-              id: '1',
-              start: new Date('2025-08-02'),
-              end: new Date('2025-08-02'),
-              title: 'Meeting with John',
-              color: 'pink',
-            },
-            {
-              id: '2',
-              start: new Date('2025-08-26'),
-              end: new Date('2025-08-26'),
-              title: 'Project Review',
-              color: 'blue',
-            },
-          ];
-
     if (loading) return <div>Loading...</div>;
 
   return (
