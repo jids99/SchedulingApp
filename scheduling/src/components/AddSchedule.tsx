@@ -16,7 +16,6 @@ import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 
-
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -25,6 +24,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 import { Check } from "lucide-react"
+import { useState } from "react"
+import { supabase } from "@/supabaseClient"
 
 const formSchema = z.object({
     name: z
@@ -39,7 +40,6 @@ const formSchema = z.object({
         .string()
         .nonempty(" is required"),
 })
-
 
 type FormValues = z.infer<typeof formSchema>
 
@@ -74,9 +74,10 @@ const names = [
     
 
 
-const AddSchedule = () => {
+const AddSchedule = ({ onAddSuccess }: { onAddSuccess: () => void }) => {
 
-
+    const [loading, setLoading] = useState(false);
+    
     const form = useForm<FormValues>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -86,8 +87,28 @@ const AddSchedule = () => {
         },
     })
 
-    function onSubmit(values: FormValues) {
+    const onSubmit = async (values: FormValues) => {
         console.log(values)
+
+        setLoading(true);
+        const { data, error } = await supabase
+        .from('schedules')
+        .insert({
+            name: values.name,
+            event_name: values.eventName,
+            schedule_date: values.scheduleDate
+        })
+        .select()
+        ; // 👈 insert as array of objects
+
+        setLoading(false);
+
+        if (error) {
+            console.error('Insert error:', error.message);
+        } else {
+            console.log('Inserted:', data);
+            onAddSuccess();
+        }
     }
 
   return (
@@ -191,7 +212,7 @@ const AddSchedule = () => {
                 )}
                 />
 
-                <Button type="submit">Submit</Button>
+                <Button disabled={loading} type="submit">{loading ? 'Adding...' : 'Add'}</Button>
             </form>
         </Form>
       

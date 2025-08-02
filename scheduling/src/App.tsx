@@ -59,41 +59,76 @@ export type CalendarProps = {
   children?: React.ReactNode;
 };
 
+const options: Intl.DateTimeFormatOptions = {
+  timeZone: "Asia/Manila",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+};
+
+const formatDate = (localDate : string) => new Date(localDate).toLocaleDateString("en-PH", options);
+
 export default function App() {
 
   const [schedules, setSchedules] = useState<Schedule[]>([]);
-  const [eventsArr, setEventsArr] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refresh, setRefresh] = useState(0);
 
-  useEffect(() => {
-    async function fetchSchedules () {
-      const { data, error } = await supabase
-        .from<'schedules',Schedule>('schedules')
-        .select();
+  const [selected, setSelected] = useState<CalendarEvent[]>([]);
 
-      if (error) {
-          console.error('Error fetching:', error);
-        } else {
-          setSchedules(data || []);
-          const selected = data.map(({ schedule_id, name, schedule_date }) => (
-            { 
-              id: String(schedule_id), 
-              start: new Date(schedule_date),
-              end: new Date(schedule_date),
-              title: name,
-            }
-          ));
-          console.log('selected ',selected);
-          const y = [...selected];
-          setEventsArr(y);
-          setLoading(false);
-        }
+  const fetchSchedules = async () => {
+    const { data, error } = await supabase
+      .from<'schedules',Schedule>('schedules')
+      .select();
+
+    if (!error) {
+      return data;
+    } else {
+      console.error('Error fetching:', error);
     }
 
-    fetchSchedules();
-  }, []);
-  
-    if (loading) return <div>Loading...</div>;
+  }
+
+  // const testEvents = [
+  //   {
+  //     id: '1',
+  //     start: new Date('2025-08-26T09:30:00Z'),
+  //     end: new Date('2025-08-26T14:30:00Z'),
+  //     title: 'Meeting with John',
+  //     color: 'pink',
+  //   },
+  //   {
+  //     id: '2',
+  //     start: new Date('2025-08-26T10:00:00Z'),
+  //     end: new Date('2025-08-26T10:30:00Z'),
+  //     title: 'Project Review',
+  //     color: 'blue',
+  //   }
+  // ];
+
+  useEffect(() => {
+
+    const fetchData = async () => {
+      const data  = await fetchSchedules() as Schedule[];
+      setSchedules(data || []);
+
+      const x = data.map(({ schedule_id, name, schedule_date }) => (
+        { 
+          id: String(schedule_id), 
+          start: new Date(schedule_date),
+          end: new Date(schedule_date),
+          title: name,
+        }
+      ));
+      setSelected([...x]);
+    }; 
+
+    fetchData();
+    setLoading(false);
+
+  }, [refresh]);
+
+  if (loading) return <div>Loading...</div>;
 
   return (
     <>
@@ -114,7 +149,7 @@ export default function App() {
               </DialogHeader>
 
               <div className="py-4">
-                <AddSchedule />
+                <AddSchedule onAddSuccess={() => setRefresh((r) => r + 1)}/>
               </div>
               
               <DialogFooter>
@@ -125,7 +160,8 @@ export default function App() {
         </div>
 
     <Calendar
-          events = {eventsArr}
+          key={selected.length}
+          events = {[...selected]}
         >
 
       <div className="h-svh w-full p-14 flex flex-col">
@@ -199,7 +235,7 @@ export default function App() {
             <TableCell> {schedule.schedule_id}</TableCell>
             <TableCell> {schedule.name}</TableCell>
             <TableCell> {schedule.event_name}</TableCell>
-            <TableCell> {schedule.schedule_date}</TableCell>
+            <TableCell> {formatDate(schedule.schedule_date)}</TableCell>
           </TableRow>
         ))}
 
