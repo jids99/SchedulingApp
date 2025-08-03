@@ -52,7 +52,7 @@ const ViewSchedule = ({ schedule_id, goNext }: {schedule_id: any, goNext: () => 
         const fetchData = async () => {
           const data  = await fetchSchedule();
           setScheduleDetails(data);
-          console.log(data);
+        //   console.log(data);
         }; 
     
         fetchData();

@@ -15,17 +15,11 @@ import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
 import { Check } from "lucide-react"
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
-import { format } from "date-fns"
+import { format, parse, isValid } from "date-fns"
 import { cn } from "@/lib/utils"
 
 import {
@@ -51,14 +45,6 @@ const formSchema = z.object({
         .nonempty(" is required"),
 })
 
-
-type Schedule = {
-  schedule_id: number;
-  name: string;
-  event_name: string;
-  schedule_date: string;
-};
-
 const events = [
     'Sunday',
     'Across',
@@ -75,6 +61,7 @@ const names = [
     'Dudong',
     'Oshin',
     'Mac',
+    'Malore',
     'Robin',
     'Jeno',
     'Irene',
@@ -88,14 +75,12 @@ const names = [
     'John',
 ];
 
-
 const EditSchedule = ({ schedule_id, goBack }: {schedule_id: any, goBack: () => void }) => {
     const [loading, setLoading] = useState(true);
-    const [scheduleDetails, setScheduleDetails] = useState<Schedule | null>(null);
 
-    const [selectedName, setSelectedName] = useState(scheduleDetails?.name);
-    const [selectedScheduleDate, setSelectedScheduleDate] = useState(scheduleDetails?.schedule_date);
-    const [SelectedEvent, setSelectedEvent] = useState(scheduleDetails?.event_name);
+    // const [selectedName, setSelectedName] = useState("");
+    // const [selectedScheduleDate, setSelectedScheduleDate] = useState("");
+    // const [selectedEvent, setSelectedEvent] = useState("");
 
     const fetchSchedule = async () => {
         const { data, error } = await supabase
@@ -115,12 +100,19 @@ const EditSchedule = ({ schedule_id, goBack }: {schedule_id: any, goBack: () => 
     useEffect(() => {
     
         const fetchData = async () => {
-          const data  = await fetchSchedule();
-          setScheduleDetails(data);
-          console.log(data);
+            const data  = await fetchSchedule();
+            // setSelectedName(data?.name);
+            // setSelectedScheduleDate(data?.schedule_date);
+            // setSelectedEvent(data?.event_name.toUpperCase());
+            form.reset({
+                name: data?.name,
+                // scheduleDate: parse("08/02/2025", "MM/dd/yyyy", new Date()),
+                scheduleDate: parse(data?.schedule_date, "MM/dd/yyyy", new Date()),
+                eventName: data?.event_name.toUpperCase(),
+            })
         }; 
-    
         fetchData();
+        
         setLoading(false);
     
     }, []);
@@ -133,17 +125,20 @@ const EditSchedule = ({ schedule_id, goBack }: {schedule_id: any, goBack: () => 
         eventName: "",
         },
     })
-    
+
+
+
     const onSubmit = async (values: FormValues) => {
         setLoading(true);
-        const { error } = await supabase
+        const { data, error } = await supabase
         .from('schedules')
         .update({
             name: values.name,
             event_name: values.eventName,
             schedule_date: values.scheduleDate
         }).
-        eq("id", schedule_id);
+        eq("schedule_id", schedule_id)
+        .select();
 
         setLoading(false);
 
@@ -151,15 +146,16 @@ const EditSchedule = ({ schedule_id, goBack }: {schedule_id: any, goBack: () => 
             console.error('Update error:', error.message);
         } else {
             console.log('Updated:', values);
+            console.log('Data:', data);
         }
     }
 
+    
 
   return (
     <>
-        {schedule_id}
-        {selectedName}
-        {scheduleDetails?.name}
+        {/* {schedule_id} */}
+        {/* {selectedName} */}
         {<Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <FormField
@@ -171,15 +167,20 @@ const EditSchedule = ({ schedule_id, goBack }: {schedule_id: any, goBack: () => 
                     <FormControl>
 
                         <Select 
-                        value={selectedName} 
-                        onValueChange={setSelectedName}
+                        value={field.value} 
+                        onValueChange={(val) => {
+                            field.onChange(val); 
+                        }}
                         >
-                            <SelectTrigger className="w-[200px]">
-                                <SelectValue placeholder="Pick one" />
+                            <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Choose Assigned"  />
                             </SelectTrigger>
                             <SelectContent>
                                 {names.map(name => (
-                                <SelectItem value={name}>
+                                <SelectItem 
+                                key={name}
+                                value={name}
+                                >
                                     {name} 
                                     {field.value === name && <Check className="h-4 w-4" />}
                                 </SelectItem>
@@ -192,7 +193,7 @@ const EditSchedule = ({ schedule_id, goBack }: {schedule_id: any, goBack: () => 
                     </FormItem>
                 )}
                 />
-
+         
                 <FormField
                 control={form.control}
                 name="scheduleDate"
@@ -206,11 +207,11 @@ const EditSchedule = ({ schedule_id, goBack }: {schedule_id: any, goBack: () => 
                                 <Button
                                 variant={"outline"}
                                 className={cn(
-                                    "w-[240px] justify-start text-left font-normal",
+                                    "w-full justify-start text-left font-normal",
                                     !field.value && "text-muted-foreground"
                                 )}
                                 >
-                                {field.value ? format(field.value, "PPP") : scheduleDetails?.schedule_date}
+                                {field.value ? format(field.value, "MM/dd/yyyy") : 'Pick a date'}
                                 </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-auto p-0">
@@ -236,22 +237,27 @@ const EditSchedule = ({ schedule_id, goBack }: {schedule_id: any, goBack: () => 
                     <FormItem>
                     <FormLabel>Event</FormLabel>
                     <FormControl>
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="outline">{field.value || scheduleDetails?.event_name}</Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent>
+                        <Select 
+                        value={field.value} 
+                        onValueChange={(val) => {
+                            field.onChange(val); 
+                        }}
+                        >
+                            <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Choose Event"  />
+                            </SelectTrigger>
+                            <SelectContent>
                                 {events.map(event => (
-                                    <DropdownMenuItem
-                                        key={event}
-                                        onClick={() => field.onChange(event)}
-                                    >
-                                        {event} 
-                                        {field.value === event && <Check className="h-4 w-4" />}
-                                    </DropdownMenuItem>
+                                <SelectItem 
+                                key={event.toUpperCase()}
+                                value={event.toUpperCase()}
+                                >
+                                    {event.toUpperCase()} 
+                                    {field.value === event.toUpperCase() && <Check className="h-4 w-4" />}
+                                </SelectItem>
                                 ))}
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                            </SelectContent>
+                        </Select>
                     </FormControl>
                     <FormMessage />
                     </FormItem>

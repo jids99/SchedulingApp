@@ -37,6 +37,8 @@ import {
   CalendarYearView,
 } from '@/components/ui/full-calendar';
 
+import { format } from "date-fns";
+
 import ViewSchedule from "./components/ViewSchedule"
 import EditSchedule from "./components/EditSchedule"
 
@@ -72,6 +74,8 @@ const formatDate = (localDate : string) => new Date(localDate).toLocaleDateStrin
 
 export default function App() {
 
+  const today = format(new Date(), "MM/dd/yyyy");
+
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [loading, setLoading] = useState(true);
   const [refresh, setRefresh] = useState(0);
@@ -84,7 +88,9 @@ export default function App() {
   const fetchSchedules = async () => {
     const { data, error } = await supabase
       .from<'schedules',Schedule>('schedules')
-      .select();
+      .select()
+      // .gte('schedule_date', format(new Date(), "MM/dd/yyyy"))
+      .order('schedule_id', { ascending: true });
 
     if (!error) {
       return data;
@@ -93,23 +99,6 @@ export default function App() {
     }
 
   }
-
-  // const testEvents = [
-  //   {
-  //     id: '1',
-  //     start: new Date('2025-08-26T09:30:00Z'),
-  //     end: new Date('2025-08-26T14:30:00Z'),
-  //     title: 'Meeting with John',
-  //     color: 'pink',
-  //   },
-  //   {
-  //     id: '2',
-  //     start: new Date('2025-08-26T10:00:00Z'),
-  //     end: new Date('2025-08-26T10:30:00Z'),
-  //     title: 'Project Review',
-  //     color: 'blue',
-  //   }
-  // ];
 
   useEffect(() => {
 
@@ -241,15 +230,16 @@ export default function App() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {schedules.map(schedule => 
-          (
+          {schedules
+          // .filter(schedule => new Date(schedule.schedule_date) >= new Date(today))
+          .map(schedule => (
+            
             <DialogTrigger 
             asChild
             key={schedule.schedule_id}
             >
               <TableRow 
               key={schedule.schedule_id}
-              // onClick={() => setSelectedSchedule(schedule.schedule_id)}
               onClick={() => { setViewEdit(1); setSelectedSchedule(schedule.schedule_id) }}
               >
                 <TableCell> {schedule.schedule_id}</TableCell>
