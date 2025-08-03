@@ -37,8 +37,8 @@ import {
   CalendarYearView,
 } from '@/components/ui/full-calendar';
 
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrash, faPen } from '@fortawesome/free-solid-svg-icons';
+import ViewSchedule from "./components/ViewSchedule"
+import EditSchedule from "./components/EditSchedule"
 
 type Schedule = {
   schedule_id: number;
@@ -77,6 +77,9 @@ export default function App() {
   const [refresh, setRefresh] = useState(0);
 
   const [selected, setSelected] = useState<CalendarEvent[]>([]);
+  const [selectedSchedule, setSelectedSchedule] = useState(0);
+
+  const [viewEdit, setViewEdit] = useState<1 | 2>(1)
 
   const fetchSchedules = async () => {
     const { data, error } = await supabase
@@ -136,7 +139,7 @@ export default function App() {
     <>
       <div className="flex min-h-svh flex-col items-center gap-8">
         <div className="flex items-end justify-between w-full">
-          <h1 className="text-3xl font-bold tracking-tigh"> Scheduling </h1>
+          <h1 className="text-3xl font-bold tracking-tight"> Scheduling </h1>
 
           <Dialog>
             <DialogTrigger asChild>
@@ -226,59 +229,60 @@ export default function App() {
         </div>
       </div>
     </Calendar>
-
+    <Dialog>
       <Table>
       {/* <TableCaption>A list of your recent invoices.</TableCaption> */}
-      <TableHeader>
-        <TableRow>
-          <TableHead className="w-[100px]">ID</TableHead>
-          <TableHead>Name</TableHead>
-          <TableHead>Event Name</TableHead>
-          <TableHead>Schedule Date</TableHead>
-          <TableHead>Actions</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {schedules.map(schedule => 
-        (
-          <TableRow key={schedule.schedule_id}>
-            <TableCell> {schedule.schedule_id}</TableCell>
-            <TableCell> {schedule.name}</TableCell>
-            <TableCell> {schedule.event_name}</TableCell>
-            <TableCell> {formatDate(schedule.schedule_date)}</TableCell>
-            <TableCell>  
-              <div className='flex gap-2'>
-
-                <Button
-                    // onClick={}
-                    className="px-4 py-2 rounded outline-none 
-                    focus:outline 
-                    focus:outline-2 
-                    focus:outline-blue-500 
-                    focus: text-white
-                    bg-transparent 
-                    text-black-500
-                    rounded"
-                >
-                    <FontAwesomeIcon icon={faPen} />
-                </Button>
-
-                <Button
-                    // onClick={}
-                    className="bg-red-400"
-                >
-                    <FontAwesomeIcon icon={faTrash} />
-                </Button>
-
-            </div>
-            </TableCell>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-[100px]">ID</TableHead>
+            <TableHead>Event </TableHead>
+            <TableHead>Assigned</TableHead>
+            <TableHead>Schedule Date</TableHead>
           </TableRow>
-        ))}
+        </TableHeader>
+        <TableBody>
+          {schedules.map(schedule => 
+          (
+            <DialogTrigger 
+            asChild
+            key={schedule.schedule_id}
+            >
+              <TableRow 
+              key={schedule.schedule_id}
+              // onClick={() => setSelectedSchedule(schedule.schedule_id)}
+              onClick={() => { setViewEdit(1); setSelectedSchedule(schedule.schedule_id) }}
+              >
+                <TableCell> {schedule.schedule_id}</TableCell>
+                <TableCell> {schedule.event_name}</TableCell>
+                <TableCell> {schedule.name}</TableCell>
+                <TableCell> {formatDate(schedule.schedule_date)}</TableCell>
+              </TableRow>
+            </DialogTrigger>
+            
+          ))}
+        </TableBody>
+      </Table>
 
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Schedule Details</DialogTitle>
+          <DialogDescription></DialogDescription>
+        </DialogHeader>
+        <div className="py-4">
 
-       
-      </TableBody>
-    </Table>
+          {/* <ViewSchedule schedule_id={selectedSchedule}/> */}
+
+          {viewEdit === 1 && (
+            <ViewSchedule schedule_id={selectedSchedule} goNext={() => setViewEdit(2)} />
+          )}
+
+          {viewEdit === 2 && (
+            <EditSchedule schedule_id={selectedSchedule} goBack={() => setViewEdit(1)} />
+          )}
+
+        </div>
+      </DialogContent>
+    </Dialog>
       
     </div>
     </>

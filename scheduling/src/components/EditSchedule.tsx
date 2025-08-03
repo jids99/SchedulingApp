@@ -1,3 +1,7 @@
+
+import { supabase } from '../supabaseClient';
+import { useEffect, useState } from 'react';
+
 import {
   Form,
   FormControl,
@@ -6,15 +10,10 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
+
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Button } from "@/components/ui/button"
-
-import { format } from "date-fns"
-import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
-import { cn } from "@/lib/utils"
 
 import {
   DropdownMenu,
@@ -22,11 +21,22 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu"
-
+import { Button } from "@/components/ui/button"
 import { Check } from "lucide-react"
-import { useState } from "react"
-import { supabase } from "@/supabaseClient"
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
+import { Calendar } from "@/components/ui/calendar"
+import { format } from "date-fns"
+import { cn } from "@/lib/utils"
 
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
+
+type FormValues = z.infer<typeof formSchema>
 const formSchema = z.object({
     name: z
         .string()
@@ -41,7 +51,13 @@ const formSchema = z.object({
         .nonempty(" is required"),
 })
 
-type FormValues = z.infer<typeof formSchema>
+
+type Schedule = {
+  schedule_id: number;
+  name: string;
+  event_name: string;
+  schedule_date: string;
+};
 
 const events = [
     'Sunday',
@@ -72,10 +88,43 @@ const names = [
     'John',
 ];
 
-const AddSchedule = ({ onAddSuccess }: { onAddSuccess: () => void }) => {
 
-    const [loading, setLoading] = useState(false);
+const EditSchedule = ({ schedule_id, goBack }: {schedule_id: any, goBack: () => void }) => {
+    const [loading, setLoading] = useState(true);
+    const [scheduleDetails, setScheduleDetails] = useState<Schedule | null>(null);
+
+    const [selectedName, setSelectedName] = useState(scheduleDetails?.name);
+    const [selectedScheduleDate, setSelectedScheduleDate] = useState(scheduleDetails?.schedule_date);
+    const [SelectedEvent, setSelectedEvent] = useState(scheduleDetails?.event_name);
+
+    const fetchSchedule = async () => {
+        const { data, error } = await supabase
+          .from('schedules')
+          .select('*')
+          .eq('schedule_id', schedule_id)
+          .maybeSingle();
     
+        if (!error) {
+          return data;
+        } else {
+          console.error('Error fetching:', error);
+        }
+    
+    }
+
+    useEffect(() => {
+    
+        const fetchData = async () => {
+          const data  = await fetchSchedule();
+          setScheduleDetails(data);
+          console.log(data);
+        }; 
+    
+        fetchData();
+        setLoading(false);
+    
+    }, []);
+
     const form = useForm<FormValues>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -84,32 +133,34 @@ const AddSchedule = ({ onAddSuccess }: { onAddSuccess: () => void }) => {
         eventName: "",
         },
     })
-
+    
     const onSubmit = async (values: FormValues) => {
         setLoading(true);
-        const { data, error } = await supabase
+        const { error } = await supabase
         .from('schedules')
-        .insert({
+        .update({
             name: values.name,
             event_name: values.eventName,
             schedule_date: values.scheduleDate
-        })
-        .select();
+        }).
+        eq("id", schedule_id);
 
         setLoading(false);
 
         if (error) {
-            console.error('Insert error:', error.message);
+            console.error('Update error:', error.message);
         } else {
-            console.log('Inserted:', data);
-            onAddSuccess();
+            console.log('Updated:', values);
         }
     }
 
-  return (
-    <div>
 
-        <Form {...form}>
+  return (
+    <>
+        {schedule_id}
+        {selectedName}
+        {scheduleDetails?.name}
+        {<Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <FormField
                 control={form.control}
@@ -118,23 +169,24 @@ const AddSchedule = ({ onAddSuccess }: { onAddSuccess: () => void }) => {
                     <FormItem>
                     <FormLabel>Name</FormLabel>
                     <FormControl>
-                        {/* <Input placeholder="Namae wa" {...field} /> */}
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="outline">{field.value || "Select Name"}</Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent>
+
+                        <Select 
+                        value={selectedName} 
+                        onValueChange={setSelectedName}
+                        >
+                            <SelectTrigger className="w-[200px]">
+                                <SelectValue placeholder="Pick one" />
+                            </SelectTrigger>
+                            <SelectContent>
                                 {names.map(name => (
-                                    <DropdownMenuItem
-                                        key={name}
-                                        onClick={() => field.onChange(name)}
-                                    >
-                                        {name} 
-                                        {field.value === name && <Check className="h-4 w-4" />}
-                                    </DropdownMenuItem>
+                                <SelectItem value={name}>
+                                    {name} 
+                                    {field.value === name && <Check className="h-4 w-4" />}
+                                </SelectItem>
                                 ))}
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                            </SelectContent>
+                        </Select>
+
                     </FormControl>
                     <FormMessage />
                     </FormItem>
@@ -148,7 +200,6 @@ const AddSchedule = ({ onAddSuccess }: { onAddSuccess: () => void }) => {
                     <FormItem>
                     <FormLabel>Schedule</FormLabel>
                     <FormControl>
-                        {/* <Input placeholder="Schedule" {...field} /> */}
 
                         <Popover>
                             <PopoverTrigger asChild>
@@ -159,7 +210,7 @@ const AddSchedule = ({ onAddSuccess }: { onAddSuccess: () => void }) => {
                                     !field.value && "text-muted-foreground"
                                 )}
                                 >
-                                {field.value ? format(field.value, "PPP") : "Pick a date"}
+                                {field.value ? format(field.value, "PPP") : scheduleDetails?.schedule_date}
                                 </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-auto p-0">
@@ -187,7 +238,7 @@ const AddSchedule = ({ onAddSuccess }: { onAddSuccess: () => void }) => {
                     <FormControl>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="outline">{field.value || "Select Event"}</Button>
+                                <Button variant="outline">{field.value || scheduleDetails?.event_name}</Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent>
                                 {events.map(event => (
@@ -207,12 +258,26 @@ const AddSchedule = ({ onAddSuccess }: { onAddSuccess: () => void }) => {
                 )}
                 />
 
-                <Button disabled={loading} type="submit">{loading ? 'Adding...' : 'Add'}</Button>
+                <Button 
+                disabled={loading} 
+                type="submit"
+                >
+                    {loading ? 'Updating...' : 'Update'}
+                    </Button>
             </form>
-        </Form>
-      
-    </div>
+        </Form> }
+        <div className='flex justify-between'>
+            <Button
+                            onClick={goBack}
+                            className="my-4 w-full"
+                        >
+                            {/* <FontAwesomeIcon icon={faPen} /> */}
+                                            Back
+                        </Button>
+
+        </div>
+    </>
   )
 }
 
-export default AddSchedule
+export default EditSchedule
