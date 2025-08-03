@@ -37,7 +37,7 @@ import {
   CalendarYearView,
 } from '@/components/ui/full-calendar';
 
-import { format } from "date-fns";
+// import { format } from "date-fns";
 
 import ViewSchedule from "./components/ViewSchedule"
 import EditSchedule from "./components/EditSchedule"
@@ -74,7 +74,7 @@ const formatDate = (localDate : string) => new Date(localDate).toLocaleDateStrin
 
 export default function App() {
 
-  const today = format(new Date(), "MM/dd/yyyy");
+  // const today = format(new Date(), "MM/dd/yyyy");
 
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [loading, setLoading] = useState(true);
