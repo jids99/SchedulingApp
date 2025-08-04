@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button"
 import {
   Table,
   TableBody,
+  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
@@ -22,7 +23,7 @@ import AddSchedule from "./components/AddSchedule"
 
 import { supabase } from './supabaseClient';
 import { useEffect, useState } from "react"
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowUp, ArrowDown, Check  } from 'lucide-react';
 
 import {
   Calendar,
@@ -41,6 +42,10 @@ import {
 
 import ViewSchedule from "./components/ViewSchedule"
 import EditSchedule from "./components/EditSchedule"
+import { Input } from "./components/ui/input"
+import FilterSchedule from "./components/FilterSchedule"
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import { faPlus, faSliders } from "@fortawesome/free-solid-svg-icons"
 
 type Schedule = {
   schedule_id: number;
@@ -74,8 +79,6 @@ const formatDate = (localDate : string) => new Date(localDate).toLocaleDateStrin
 
 export default function App() {
 
-  // const today = format(new Date(), "MM/dd/yyyy");
-
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [loading, setLoading] = useState(true);
   const [refresh, setRefresh] = useState(0);
@@ -83,14 +86,44 @@ export default function App() {
   const [selected, setSelected] = useState<CalendarEvent[]>([]);
   const [selectedSchedule, setSelectedSchedule] = useState(0);
 
+  const [calendarUpdate, setCalendarUpdate] = useState(0);
+
   const [viewEdit, setViewEdit] = useState<1 | 2>(1)
 
+  const [scheduleFilters, setScheduleFilters] = useState({assigned_name: "", event_name: ""});
+
+  const [openModalAdd, setOpenModalAdd] = useState(false);
+  const [openModalEdit, setOpenModalEdit] = useState(false);
+  const [openModalFilter, setOpenModalFilter] = useState(false);
+
+  ///////////////////// MODAL ///////////////////// 
+
+  const handleAddEditSuccess = () => {
+    setOpenModalAdd(false);
+    setOpenModalEdit(false);
+    setOpenModalFilter(false);
+    setRefresh((r) => r + 1)
+  }
+
+  ///////////////////// FETCHING ///////////////////// 
+
   const fetchSchedules = async () => {
-    const { data, error } = await supabase
-      .from<'schedules',Schedule>('schedules')
-      .select()
-      // .gte('schedule_date', format(new Date(), "MM/dd/yyyy"))
-      .order('schedule_id', { ascending: true });
+
+    let query = supabase.from<'schedules',Schedule>('schedules').select();
+
+    const hasNameFilter = scheduleFilters.assigned_name.length > 0;
+    const hasEventFilter = scheduleFilters.event_name.length > 0;
+    const hasAllFilters = hasNameFilter && hasEventFilter;
+
+    if(hasAllFilters) {
+      query = supabase.rpc('get_user_event_schedules', { assigned: scheduleFilters.assigned_name, eventname: scheduleFilters.event_name });
+    } else if(hasNameFilter){
+      query = supabase.rpc('get_user_schedules', { assigned: scheduleFilters.assigned_name });
+    } else if(hasEventFilter){
+      query = supabase.rpc('get_event_schedules', { eventname: scheduleFilters.event_name });
+    }
+
+    const { data, error } = await query;
 
     if (!error) {
       return data;
@@ -101,7 +134,6 @@ export default function App() {
   }
 
   useEffect(() => {
-
     const fetchData = async () => {
       const data  = await fetchSchedules() as Schedule[];
       setSchedules(data || []);
@@ -115,12 +147,47 @@ export default function App() {
         }
       ));
       setSelected([...x]);
+      setCalendarUpdate(v => v + 1);
     }; 
 
     fetchData();
     setLoading(false);
 
   }, [refresh]);
+
+
+  ///////////////////// FILTERING ///////////////////// 
+
+  const handleFilter = (filters: {assigned_name: string, event_name: string}) => {
+    setScheduleFilters(filters);
+  }
+
+  const filteredData = schedules.filter(schedule =>
+    schedule.name.toLowerCase().includes(scheduleFilters.assigned_name.toLowerCase())
+  )
+
+  ///////////////////// SORTING ///////////////////// 
+
+  const [sortBy, setSortBy] = useState<keyof Schedule | null>(null)
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc")
+
+  const sortedData = [...filteredData].sort((a, b) => {
+    if (!sortBy) return 0
+    const valA = a[sortBy]
+    const valB = b[sortBy]
+    if (valA < valB) return sortDir === "asc" ? -1 : 1
+    if (valA > valB) return sortDir === "asc" ? 1 : -1
+    return 0
+  })
+
+  const toggleSort = (column: keyof Schedule) => {
+    if (sortBy === column) {
+      setSortDir(prev => (prev === "asc" ? "desc" : "asc"))
+    } else {
+      setSortBy(column)
+      setSortDir("asc")
+    }
+  }
 
   if (loading) return <div>Loading...</div>;
 
@@ -130,31 +197,61 @@ export default function App() {
         <div className="flex items-end justify-between w-full">
           <h1 className="text-3xl font-bold tracking-tight"> Scheduling </h1>
 
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button>Add</Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add Schedule</DialogTitle>
-                <DialogDescription>
-                  {/* This action cannot be undone. This will permanently delete your account. */}
-                </DialogDescription>
-              </DialogHeader>
+          <div className="flex gap-2">
 
-              <div className="py-4">
-                <AddSchedule onAddSuccess={() => setRefresh((r) => r + 1)}/>
-              </div>
-              
-              <DialogFooter>
-                {/* <Button variant="outline" className="">Cancel</Button> */}
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+            <Dialog open={openModalFilter} onOpenChange={setOpenModalFilter}>
+              <DialogTrigger asChild>
+                <Button>
+                  <FontAwesomeIcon icon={faSliders} /> 
+                  Filter
+                  </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Filter</DialogTitle>
+                  <DialogDescription></DialogDescription>
+                </DialogHeader>
+
+                <div className="py-4">
+                  <FilterSchedule handleFilter={handleFilter} onAddSuccess={handleAddEditSuccess}/>
+                </div>
+                
+                <DialogFooter>
+                  {/* <Button variant="outline" className="">Cancel</Button> */}
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+            <Dialog open={openModalAdd} onOpenChange={setOpenModalAdd}>
+              <DialogTrigger asChild>
+                <Button>
+                  <FontAwesomeIcon icon={faPlus} /> 
+                  Add
+                  </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add Schedule</DialogTitle>
+                  <DialogDescription>
+                    {/* This action cannot be undone. This will permanently delete your account. */}
+                  </DialogDescription>
+                </DialogHeader>
+
+                <div className="py-4">
+                  <AddSchedule onAddSuccess={handleAddEditSuccess}/>
+                </div>
+                
+                <DialogFooter>
+                  {/* <Button variant="outline" className="">Cancel</Button> */}
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
+
         </div>
 
     <Calendar
-          key={selected.length}
+          key={calendarUpdate}
           events = {[...selected]}
         >
 
@@ -190,9 +287,6 @@ export default function App() {
                 Year
               </CalendarViewTrigger>
             </div>
-            <div className="flex">
-              <CalendarCurrentDate />
-            </div>
             <div className="flex items-center gap-2">
               <CalendarPrevTrigger>
                 <ChevronLeft size={20} />
@@ -207,6 +301,9 @@ export default function App() {
               </CalendarNextTrigger>
 
             </div>
+            <div className="flex">
+              <CalendarCurrentDate />
+            </div>
           
         </div>
 
@@ -218,19 +315,38 @@ export default function App() {
         </div>
       </div>
     </Calendar>
-    <Dialog>
+
+    
+
+    <Dialog open={openModalEdit} onOpenChange={setOpenModalEdit}>
       <Table>
-      {/* <TableCaption>A list of your recent invoices.</TableCaption> */}
+      <TableCaption>A list of assigned graphics kapatechies per event</TableCaption>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[100px]">ID</TableHead>
-            <TableHead>Event </TableHead>
-            <TableHead>Assigned</TableHead>
-            <TableHead>Schedule Date</TableHead>
+            <TableHead 
+            onClick={() => toggleSort("schedule_id")} className="cursor-pointer select-none">
+               ID{" "}
+            {sortBy === "schedule_id" && (sortDir === "asc" ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+            </TableHead>
+            <TableHead 
+            onClick={() => toggleSort("event_name")} className="cursor-pointer select-none">
+               Event{" "}
+            {sortBy === "event_name" && (sortDir === "asc" ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+            </TableHead>
+            <TableHead 
+            onClick={() => toggleSort("name")} className="cursor-pointer select-none">
+               Assigned{" "}
+            {sortBy === "name" && (sortDir === "asc" ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+            </TableHead>
+            <TableHead 
+            onClick={() => toggleSort("schedule_date")} className="cursor-pointer select-none">
+               Schedule Date{" "}
+            {sortBy === "schedule_date" && (sortDir === "asc" ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {schedules
+          {sortedData
           // .filter(schedule => new Date(schedule.schedule_date) >= new Date(today))
           .map(schedule => (
             
@@ -263,11 +379,19 @@ export default function App() {
           {/* <ViewSchedule schedule_id={selectedSchedule}/> */}
 
           {viewEdit === 1 && (
-            <ViewSchedule schedule_id={selectedSchedule} goNext={() => setViewEdit(2)} />
+            <ViewSchedule 
+              schedule_id={selectedSchedule} 
+              goNext={() => setViewEdit(2)} 
+              onAddSuccess={handleAddEditSuccess} 
+            />
           )}
 
           {viewEdit === 2 && (
-            <EditSchedule schedule_id={selectedSchedule} goBack={() => setViewEdit(1)} />
+            <EditSchedule 
+              schedule_id={selectedSchedule} 
+              goBack={() => setViewEdit(1)} 
+              onAddSuccess={handleAddEditSuccess} 
+            />
           )}
 
         </div>

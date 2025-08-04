@@ -28,7 +28,7 @@ const options: Intl.DateTimeFormatOptions = {
 
 const formatDate = (localDate : string) => new Date(localDate).toLocaleDateString("en-PH", options);
 
-const ViewSchedule = ({ schedule_id, goNext }: {schedule_id: any, goNext: () => void }) => {
+const ViewSchedule = ({ schedule_id, goNext, onAddSuccess }: {schedule_id: any, goNext: () => void, onAddSuccess: () => void  }) => {
   const [loading, setLoading] = useState(true);
     const [scheduleDetails, setScheduleDetails] = useState<Schedule | null>(null);
 
@@ -59,7 +59,24 @@ const ViewSchedule = ({ schedule_id, goNext }: {schedule_id: any, goNext: () => 
         setLoading(false);
     
     }, []);
-    
+
+    async function handleDelete() {
+        const confirmed = window.confirm("Are you sure you want to delete this entry?");
+         if (!confirmed) return;
+
+        const { data, error } = await supabase
+            .from('schedules')
+            .delete()
+            .eq('schedule_id', schedule_id);
+
+        if (error) {
+            console.error('Delete failed:', error.message);
+        } else {
+            console.log('Deleted successfully:', data);
+            onAddSuccess();
+        }
+    }
+
   if (loading) return <div>Loading...</div>;
 
   return (
@@ -73,7 +90,7 @@ const ViewSchedule = ({ schedule_id, goNext }: {schedule_id: any, goNext: () => 
                     <span className='text-sm'> Assigned </span>
                 </div>
                 <Button
-                    // onClick={}
+                    onClick={() => handleDelete()}
                     className="bg-red-400 items-center"
                 >
                     <FontAwesomeIcon icon={faTrash} />

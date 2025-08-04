@@ -32,6 +32,8 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faBackward, faChevronLeft, faSave } from '@fortawesome/free-solid-svg-icons';
 
 type FormValues = z.infer<typeof formSchema>
 const formSchema = z.object({
@@ -77,13 +79,8 @@ const names = [
     'Adi',
     'John',
 ];
-
-const EditSchedule = ({ schedule_id, goBack }: {schedule_id: any, goBack: () => void }) => {
+const EditSchedule = ({ schedule_id, goBack, onAddSuccess }: {schedule_id: any, goBack: () => void, onAddSuccess: () => void }) => {
     const [loading, setLoading] = useState(true);
-
-    // const [selectedName, setSelectedName] = useState("");
-    // const [selectedScheduleDate, setSelectedScheduleDate] = useState("");
-    // const [selectedEvent, setSelectedEvent] = useState("");
 
     const fetchSchedule = async () => {
         const { data, error } = await supabase
@@ -104,13 +101,11 @@ const EditSchedule = ({ schedule_id, goBack }: {schedule_id: any, goBack: () => 
     
         const fetchData = async () => {
             const data  = await fetchSchedule();
-            // setSelectedName(data?.name);
-            // setSelectedScheduleDate(data?.schedule_date);
-            // setSelectedEvent(data?.event_name.toUpperCase());
             form.reset({
                 name: data?.name,
                 // scheduleDate: parse("08/02/2025", "MM/dd/yyyy", new Date()),
-                scheduleDate: parse(data?.schedule_date, "MM/dd/yyyy", new Date()),
+                // scheduleDate: parse(data?.schedule_date, "MM/dd/yyyy", new Date()),
+                scheduleDate: new Date(data?.schedule_date),
                 eventName: data?.event_name.toUpperCase(),
             })
         }; 
@@ -150,15 +145,12 @@ const EditSchedule = ({ schedule_id, goBack }: {schedule_id: any, goBack: () => 
         } else {
             console.log('Updated:', values);
             console.log('Data:', data);
+            onAddSuccess();
         }
     }
 
-    
-
   return (
     <>
-        {/* {schedule_id} */}
-        {/* {selectedName} */}
         {<Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <FormField
@@ -269,21 +261,24 @@ const EditSchedule = ({ schedule_id, goBack }: {schedule_id: any, goBack: () => 
 
                 <Button 
                 disabled={loading} 
+                className="my-4 w-full"
                 type="submit"
+                
                 >
+                <FontAwesomeIcon icon={faSave} />
                     {loading ? 'Updating...' : 'Update'}
                     </Button>
             </form>
         </Form> }
         <div className='flex justify-between'>
             <Button
-                            onClick={goBack}
-                            className="my-4 w-full"
-                        >
-                            {/* <FontAwesomeIcon icon={faPen} /> */}
-                                            Back
-                        </Button>
-
+                onClick={goBack}
+                className="w-full border border-gray-300 bg-white text-black px-4 py-2 rounded
+                hover:bg-blue-50 hover:text-blue-700 hover:border-blue-700"
+            >
+                <FontAwesomeIcon icon={faChevronLeft} />
+                                Back
+            </Button>
         </div>
     </>
   )
