@@ -23,7 +23,7 @@ import AddSchedule from "./components/AddSchedule"
 
 import { supabase } from './supabaseClient';
 import { useEffect, useState } from "react"
-import { ChevronLeft, ChevronRight, ArrowUp, ArrowDown, Check  } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowUp, ArrowDown  } from 'lucide-react';
 
 import {
   Calendar,
@@ -42,7 +42,6 @@ import {
 
 import ViewSchedule from "./components/ViewSchedule"
 import EditSchedule from "./components/EditSchedule"
-import { Input } from "./components/ui/input"
 import FilterSchedule from "./components/FilterSchedule"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faPlus, faSliders } from "@fortawesome/free-solid-svg-icons"

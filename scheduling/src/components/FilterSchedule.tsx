@@ -31,11 +31,6 @@ const formSchema = z.object({
         .string()
 })
 
-type Schedule = {
-  name: string;
-  event_name: string;
-};
-
 const events = [
     'Sunday',
     'Across',

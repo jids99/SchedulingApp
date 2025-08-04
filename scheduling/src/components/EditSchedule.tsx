@@ -20,7 +20,6 @@ import { Check } from "lucide-react"
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
 import { format, 
-    parse, 
     // isValid 
 } from "date-fns"
 import { cn } from "@/lib/utils"
@@ -33,7 +32,7 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBackward, faChevronLeft, faSave } from '@fortawesome/free-solid-svg-icons';
+import { faChevronLeft, faSave } from '@fortawesome/free-solid-svg-icons';
 
 type FormValues = z.infer<typeof formSchema>
 const formSchema = z.object({
