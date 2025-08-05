@@ -44,7 +44,7 @@ import ViewSchedule from "./components/ViewSchedule"
 import EditSchedule from "./components/EditSchedule"
 import FilterSchedule from "./components/FilterSchedule"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faF, faPlus, faSliders } from "@fortawesome/free-solid-svg-icons"
+import { faFilter, faPlus } from "@fortawesome/free-solid-svg-icons"
 
 type Schedule = {
   schedule_id: number;
@@ -90,6 +90,7 @@ export default function App() {
   const [viewEdit, setViewEdit] = useState<1 | 2>(1)
 
   const [scheduleFilters, setScheduleFilters] = useState({assigned_name: "", event_name: ""});
+  const [filterCallback, setFilterCallback] = useState({assigned_name: "", event_name: ""});
 
   const [openModalAdd, setOpenModalAdd] = useState(false);
   const [openModalEdit, setOpenModalEdit] = useState(false);
@@ -160,6 +161,7 @@ export default function App() {
 
   const handleFilter = (filters: {assigned_name: string, event_name: string}) => {
     setScheduleFilters(filters);
+    setFilterCallback(filters);
 
   }
 
@@ -203,7 +205,7 @@ export default function App() {
             <Dialog open={openModalFilter} onOpenChange={setOpenModalFilter}>
               <DialogTrigger asChild>
                 <Button>
-                  <FontAwesomeIcon icon={faSliders} /> 
+                  <FontAwesomeIcon icon={faFilter} /> 
                   Filter
                   </Button>
               </DialogTrigger>
@@ -214,7 +216,7 @@ export default function App() {
                 </DialogHeader>
 
                 <div className="py-4">
-                  <FilterSchedule handleFilter={handleFilter} onAddSuccess={handleAddEditSuccess}/>
+                  <FilterSchedule handleFilter={handleFilter} filter={filterCallback} onAddSuccess={handleAddEditSuccess}/>
                 </div>
                 
                 <DialogFooter>

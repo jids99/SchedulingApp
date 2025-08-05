@@ -102,8 +102,6 @@ const EditSchedule = ({ schedule_id, goBack, onAddSuccess }: {schedule_id: any, 
             const data  = await fetchSchedule();
             form.reset({
                 name: data?.name,
-                // scheduleDate: parse("08/02/2025", "MM/dd/yyyy", new Date()),
-                // scheduleDate: parse(data?.schedule_date, "MM/dd/yyyy", new Date()),
                 scheduleDate: new Date(data?.schedule_date),
                 eventName: data?.event_name.toUpperCase(),
             })
@@ -122,8 +120,6 @@ const EditSchedule = ({ schedule_id, goBack, onAddSuccess }: {schedule_id: any, 
         eventName: "",
         },
     })
-
-
 
     const onSubmit = async (values: FormValues) => {
         setLoading(true);

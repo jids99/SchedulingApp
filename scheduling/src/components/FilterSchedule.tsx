@@ -22,6 +22,8 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import { faFilterCircleXmark } from "@fortawesome/free-solid-svg-icons"
 
 type FormValues = z.infer<typeof formSchema>
 const formSchema = z.object({
@@ -61,31 +63,44 @@ const names = [
     'John',
 ];
 
-const FilterSchedule = ({ onAddSuccess, handleFilter }: 
+const FilterSchedule = ({ onAddSuccess, handleFilter, filter }: 
                         { handleFilter: (filters: {assigned_name: string, event_name: string}) => void, 
+                            filter: {assigned_name: string, event_name: string}, 
                             onAddSuccess: () => void }) => {
 
+    const clearFilters = () => {
+        form.reset({
+            name: "Choose Assigned",
+            eventName: "Choose Event",
+        });
+    };
+    
     const form = useForm<FormValues>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-        name: "",
-        eventName: "",
+        name: filter.assigned_name,
+        eventName: filter.event_name,
         },
     })
 
     const onSubmit = async (values: FormValues) => {
-            // console.log('Filters:', values);
-
-            handleFilter({
-                assigned_name: values.name,
-                event_name: values.eventName,
-            })
-
-            onAddSuccess();
+        handleFilter({
+            assigned_name: values.name,
+            event_name: values.eventName,
+        })
+        onAddSuccess();
     }
 
   return (
     <>
+    <Button 
+                onClick={() => clearFilters()}
+                className="w-full mb-4 border border-gray-300 bg-white text-black px-4 py-2 rounded
+                hover:bg-blue-50 hover:text-blue-700 hover:border-blue-700"
+                >
+                    <FontAwesomeIcon icon={faFilterCircleXmark} /> 
+                    Clear Filter
+                    </Button>
         {<Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <FormField
@@ -160,7 +175,9 @@ const FilterSchedule = ({ onAddSuccess, handleFilter }:
 
                 <Button 
                 type="submit"
+                className="w-full mt-4"
                 >
+                    <FontAwesomeIcon icon={faFilterCircleXmark} /> 
                     Filter
                     </Button>
             </form>
