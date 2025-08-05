@@ -61,7 +61,9 @@ const names = [
     'John',
 ];
 
-const FilterSchedule = ({ onAddSuccess, handleFilter }: { handleFilter: (filters: {assigned_name: string, event_name: string}) => void , onAddSuccess: () => void }) => {
+const FilterSchedule = ({ onAddSuccess, handleFilter }: 
+                        { handleFilter: (filters: {assigned_name: string, event_name: string}) => void, 
+                            onAddSuccess: () => void }) => {
 
     const form = useForm<FormValues>({
         resolver: zodResolver(formSchema),

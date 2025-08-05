@@ -3,6 +3,7 @@ import { faTrash, faPen } from '@fortawesome/free-solid-svg-icons';
 import { Button } from "@/components/ui/button"
 import { supabase } from '../supabaseClient';
 import { useEffect, useState } from 'react';
+import { format } from 'date-fns';
 
 type Schedule = {
   schedule_id: number;
@@ -98,18 +99,25 @@ const ViewSchedule = ({ schedule_id, goNext, onAddSuccess }: {schedule_id: any, 
                 </Button>
             </div>
             <div className='flex flex-col gap-2'>
-                <p className='flex justify-between w-full'>
-                    <b className='text-sm'> Event </b>
-                    <span> {scheduleDetails?.event_name}  </span>
-                </p>
+                <div className='flex justify-between w-full'>
+                    <div className='flex flex-col'>
+                        <span className="text-l font-bold tracking-tight"> 
+                            {scheduleDetails?.event_name}  
+                        </span>
+                        <span className='text-sm'> Event </span>
+                    </div>
+
+                    <div className='flex flex-col'>
+                        <span className="text-l font-bold tracking-tight"> 
+                            {format(scheduleDetails?.schedule_date || 0, "PPP")}  
+                        </span>
+                        <span className='text-sm text-right'> Schedule Date </span>
+                    </div>
+                </div>
                 <hr />
                 <p className='flex justify-between w-full'>
                     <b className='text-sm'> ID </b>
                     <span> {schedule_id}  </span>
-                </p>
-                <p className='flex justify-between w-full'>
-                    <b className='text-sm'> Schedule Date </b>
-                    <span> {scheduleDetails?.schedule_date}  </span>
                 </p>
                 <p className='flex justify-between w-full'>
                     <b className='text-sm'> Created by </b>

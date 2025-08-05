@@ -44,7 +44,7 @@ import ViewSchedule from "./components/ViewSchedule"
 import EditSchedule from "./components/EditSchedule"
 import FilterSchedule from "./components/FilterSchedule"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faPlus, faSliders } from "@fortawesome/free-solid-svg-icons"
+import { faF, faPlus, faSliders } from "@fortawesome/free-solid-svg-icons"
 
 type Schedule = {
   schedule_id: number;
@@ -95,6 +95,7 @@ export default function App() {
   const [openModalEdit, setOpenModalEdit] = useState(false);
   const [openModalFilter, setOpenModalFilter] = useState(false);
 
+  
   ///////////////////// MODAL ///////////////////// 
 
   const handleAddEditSuccess = () => {
@@ -108,7 +109,7 @@ export default function App() {
 
   const fetchSchedules = async () => {
 
-    let query = supabase.from<'schedules',Schedule>('schedules').select();
+    let query = supabase.from<'schedules',Schedule>('schedules').select().order('schedule_id', {ascending: true});
 
     const hasNameFilter = scheduleFilters.assigned_name.length > 0;
     const hasEventFilter = scheduleFilters.event_name.length > 0;
@@ -159,6 +160,7 @@ export default function App() {
 
   const handleFilter = (filters: {assigned_name: string, event_name: string}) => {
     setScheduleFilters(filters);
+
   }
 
   const filteredData = schedules.filter(schedule =>
@@ -255,10 +257,9 @@ export default function App() {
         >
 
       <div className="h-svh w-full flex flex-col
-                      lg:p-14">
+                      lg:p-8">
         <div className="flex flex-col px-6 items-center justify-center gap-2 mb-6
                 lg:flex-row">
-
 
             <div className="flex">
               <CalendarViewTrigger
@@ -286,6 +287,7 @@ export default function App() {
                 Year
               </CalendarViewTrigger>
             </div>
+
             <div className="flex items-center gap-2">
               <CalendarPrevTrigger>
                 <ChevronLeft size={20} />
@@ -300,11 +302,11 @@ export default function App() {
               </CalendarNextTrigger>
 
             </div>
-            <div className="flex">
-              <CalendarCurrentDate />
-            </div>
           
         </div>
+            <div className="flex w-full items-center justify-center p-2 mb-2">
+              <CalendarCurrentDate />
+            </div>
 
         <div className="flex-1 px-6 overflow-hidden">
           <CalendarDayView />
@@ -314,88 +316,90 @@ export default function App() {
         </div>
       </div>
     </Calendar>
+    <div className="h-svh w-full
+                      lg:px-14">
 
-    
-
-    <Dialog open={openModalEdit} onOpenChange={setOpenModalEdit}>
-      <Table>
-      <TableCaption>A list of assigned graphics kapatechies per event</TableCaption>
-        <TableHeader>
-          <TableRow>
-            <TableHead 
-            onClick={() => toggleSort("schedule_id")} className="cursor-pointer select-none">
-               ID{" "}
-            {sortBy === "schedule_id" && (sortDir === "asc" ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
-            </TableHead>
-            <TableHead 
-            onClick={() => toggleSort("event_name")} className="cursor-pointer select-none">
-               Event{" "}
-            {sortBy === "event_name" && (sortDir === "asc" ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
-            </TableHead>
-            <TableHead 
-            onClick={() => toggleSort("name")} className="cursor-pointer select-none">
-               Assigned{" "}
-            {sortBy === "name" && (sortDir === "asc" ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
-            </TableHead>
-            <TableHead 
-            onClick={() => toggleSort("schedule_date")} className="cursor-pointer select-none">
-               Schedule Date{" "}
-            {sortBy === "schedule_date" && (sortDir === "asc" ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {sortedData
-          // .filter(schedule => new Date(schedule.schedule_date) >= new Date(today))
-          .map(schedule => (
-            
-            <DialogTrigger 
-            asChild
-            key={schedule.schedule_id}
-            >
-              <TableRow 
+      <Dialog open={openModalEdit} onOpenChange={setOpenModalEdit}>
+      
+        <Table>
+        <TableCaption>A list of assigned graphics kapatechies per event</TableCaption>
+          <TableHeader>
+            <TableRow>
+              <TableHead 
+              onClick={() => toggleSort("schedule_id")} className="cursor-pointer select-none">
+                ID{" "}
+              {sortBy === "schedule_id" && (sortDir === "asc" ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+              </TableHead>
+              <TableHead 
+              onClick={() => toggleSort("event_name")} className="cursor-pointer select-none">
+                Event{" "}
+              {sortBy === "event_name" && (sortDir === "asc" ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+              </TableHead>
+              <TableHead 
+              onClick={() => toggleSort("name")} className="cursor-pointer select-none">
+                Assigned{" "}
+              {sortBy === "name" && (sortDir === "asc" ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+              </TableHead>
+              <TableHead 
+              onClick={() => toggleSort("schedule_date")} className="cursor-pointer select-none">
+                Schedule Date{" "}
+              {sortBy === "schedule_date" && (sortDir === "asc" ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {sortedData
+            // .filter(schedule => new Date(schedule.schedule_date) >= new Date(today))
+            .map(schedule => (
+              
+              <DialogTrigger 
+              asChild
               key={schedule.schedule_id}
-              onClick={() => { setViewEdit(1); setSelectedSchedule(schedule.schedule_id) }}
               >
-                <TableCell> {schedule.schedule_id}</TableCell>
-                <TableCell> {schedule.event_name}</TableCell>
-                <TableCell> {schedule.name}</TableCell>
-                <TableCell> {formatDate(schedule.schedule_date)}</TableCell>
-              </TableRow>
-            </DialogTrigger>
-            
-          ))}
-        </TableBody>
-      </Table>
+                <TableRow 
+                key={schedule.schedule_id}
+                onClick={() => { setViewEdit(1); setSelectedSchedule(schedule.schedule_id) }}
+                >
+                  <TableCell> {schedule.schedule_id}</TableCell>
+                  <TableCell> {schedule.event_name}</TableCell>
+                  <TableCell> {schedule.name}</TableCell>
+                  <TableCell> {formatDate(schedule.schedule_date)}</TableCell>
+                </TableRow>
+              </DialogTrigger>
+              
+            ))}
+          </TableBody>
+        </Table>
 
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Schedule Details</DialogTitle>
-          <DialogDescription></DialogDescription>
-        </DialogHeader>
-        <div className="py-4">
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Schedule Details</DialogTitle>
+            <DialogDescription></DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
 
-          {/* <ViewSchedule schedule_id={selectedSchedule}/> */}
+            {/* <ViewSchedule schedule_id={selectedSchedule}/> */}
 
-          {viewEdit === 1 && (
-            <ViewSchedule 
-              schedule_id={selectedSchedule} 
-              goNext={() => setViewEdit(2)} 
-              onAddSuccess={handleAddEditSuccess} 
-            />
-          )}
+            {viewEdit === 1 && (
+              <ViewSchedule 
+                schedule_id={selectedSchedule} 
+                goNext={() => setViewEdit(2)} 
+                onAddSuccess={handleAddEditSuccess} 
+              />
+            )}
 
-          {viewEdit === 2 && (
-            <EditSchedule 
-              schedule_id={selectedSchedule} 
-              goBack={() => setViewEdit(1)} 
-              onAddSuccess={handleAddEditSuccess} 
-            />
-          )}
+            {viewEdit === 2 && (
+              <EditSchedule 
+                schedule_id={selectedSchedule} 
+                goBack={() => setViewEdit(1)} 
+                onAddSuccess={handleAddEditSuccess} 
+              />
+            )}
 
-        </div>
-      </DialogContent>
-    </Dialog>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
       
     </div>
     </>
