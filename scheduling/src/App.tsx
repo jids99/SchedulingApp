@@ -156,7 +156,6 @@ export default function App() {
 
   }, [refresh]);
 
-
   ///////////////////// FILTERING ///////////////////// 
 
   const handleFilter = (filters: {assigned_name: string, event_name: string}) => {

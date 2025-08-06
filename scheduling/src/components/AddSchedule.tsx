@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 import { Check } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { supabase } from "@/supabaseClient"
 
 const formSchema = z.object({
@@ -55,26 +55,58 @@ const events = [
     'Shepherd',
 ];
 
-const names = [
-    'Dudong',
-    'Oshin',
-    'Mac',
-    'Robin',
-    'Jeno',
-    'Irene',
-    'Janzen',
-    'Amy',
-    'Ember',
-    'Keziah',
-    'JL',
-    'Juvy',
-    'Adi',
-    'John',
-];
+// const names = [
+//     'Dudong',
+//     'Oshin',
+//     'Mac',
+//     'Malore',
+//     'Robin',
+//     'Jeno',
+//     'Irene',
+//     'Janzen',
+//     'Amy',
+//     'Ember',
+//     'Keziah',
+//     'JL',
+//     'Juvy',
+//     'Adi',
+//     'John',
+// ];
+
+type Users = {
+  user_id: number;
+  name: string;
+};
 
 const AddSchedule = ({ onAddSuccess }: { onAddSuccess: () => void }) => {
 
     const [loading, setLoading] = useState(false);
+    const [names, setNames] = useState<Users[]>([]);
+
+    const fetchUsers = async () => {
+        
+        let query = supabase.from<'users',Users>('users').select().order('name', {ascending: true});
+
+        const { data, error } = await query;
+
+        if (!error) {
+            return data;
+        } else {
+            console.error('Error fetching:', error);
+        }
+
+    }
+
+    useEffect(() => {
+        const fetchData = async () => {
+            const data  = await fetchUsers() as Users[];
+            setNames(data || []);
+        }; 
+
+        fetchData();
+        setLoading(false);
+
+    }, []);
     
     const form = useForm<FormValues>({
         resolver: zodResolver(formSchema),
@@ -126,11 +158,11 @@ const AddSchedule = ({ onAddSuccess }: { onAddSuccess: () => void }) => {
                             <DropdownMenuContent>
                                 {names.map(name => (
                                     <DropdownMenuItem
-                                        key={name}
-                                        onClick={() => field.onChange(name)}
+                                        key={name.user_id}
+                                        onClick={() => field.onChange(name.name)}
                                     >
-                                        {name} 
-                                        {field.value === name && <Check className="h-4 w-4" />}
+                                        {name.name} 
+                                        {field.value === name.name && <Check className="h-4 w-4" />}
                                     </DropdownMenuItem>
                                 ))}
                             </DropdownMenuContent>
@@ -155,7 +187,7 @@ const AddSchedule = ({ onAddSuccess }: { onAddSuccess: () => void }) => {
                                 <Button
                                 variant={"outline"}
                                 className={cn(
-                                    "w-[240px] justify-start text-left font-normal",
+                                    "w-full justify-start text-left font-normal",
                                     !field.value && "text-muted-foreground"
                                 )}
                                 >
