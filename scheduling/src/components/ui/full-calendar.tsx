@@ -264,8 +264,6 @@ const CalendarDayView = () => {
   );
 };
 
-
-
 const CalendarWeekView = () => {
   const { view, date, locale, events } = useCalendar();
 
@@ -350,6 +348,15 @@ const CalendarWeekView = () => {
   );
 };
 
+const options: Intl.DateTimeFormatOptions = {
+  timeZone: "Asia/Manila",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+};
+
+const formatDate = (localDate : string) => new Date(localDate).toLocaleDateString("en-PH", options);
+
 const CalendarMonthView = () => {
   const { date, view, events, locale } = useCalendar();
 
@@ -361,11 +368,8 @@ const CalendarMonthView = () => {
   const fetchSchedule = async (scheduleDate: Date) => {
 
     const formatted = format(scheduleDate, "yyyy-MM-dd");
- 
-    let query = supabase
-                .from('schedules')
-                .select('*')
-                .filter('schedule_date::date', 'eq', formatted);
+
+    let query = supabase.rpc('getscheduleusinglocaldate', { input_date: formatted });
 
     const { data, error } = await query;
 
