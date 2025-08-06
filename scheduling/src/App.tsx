@@ -349,10 +349,7 @@ export default function App() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sortedData
-            // .filter(schedule => new Date(schedule.schedule_date) >= new Date(today))
-            .map(schedule => (
-              
+            {sortedData.map(schedule => (
               <DialogTrigger 
               asChild
               key={schedule.schedule_id}

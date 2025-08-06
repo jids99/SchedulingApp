@@ -2,6 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+
 import { type VariantProps, cva } from 'class-variance-authority';
 import {
   type Locale,
@@ -16,6 +17,7 @@ import {
   isSameHour,
   isSameMonth,
   isToday,
+  parse,
   setHours,
   setMonth,
   startOfMonth,
@@ -32,10 +34,23 @@ import {
   forwardRef,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
 } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
+
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog"
+import { supabase } from '@/supabaseClient';
+import { _date } from 'zod/v4/core';
 
 const monthEventVariants = cva('size-2 rounded-full', {
   variants: {
@@ -102,6 +117,13 @@ type CalendarProps = {
   enableHotkeys?: boolean;
   onChangeView?: (view: View) => void;
   onEventClick?: (event: CalendarEvent) => void;
+};
+
+type Schedule = {
+  schedule_id: number;
+  name: string;
+  event_name: string;
+  schedule_date: string;
 };
 
 const Calendar = ({
@@ -242,6 +264,8 @@ const CalendarDayView = () => {
   );
 };
 
+
+
 const CalendarWeekView = () => {
   const { view, date, locale, events } = useCalendar();
 
@@ -268,6 +292,8 @@ const CalendarWeekView = () => {
   }, [date]);
 
   if (view !== 'week') return null;
+
+  
 
   return (
     <div className="flex flex-col relative overflow-auto h-full">
@@ -329,6 +355,32 @@ const CalendarMonthView = () => {
 
   const monthDates = useMemo(() => getDaysInMonth(date), [date]);
   const weekDays = useMemo(() => generateWeekdays(locale), [locale]);
+  
+  const [scheduleDetails, setScheduleDetails] = useState<Schedule[]>([]);
+
+  const fetchSchedule = async (scheduleDate: Date) => {
+
+    const formatted = format(scheduleDate, "yyyy-MM-dd");
+ 
+    let query = supabase
+                .from('schedules')
+                .select('*')
+                .filter('schedule_date::date', 'eq', formatted);
+
+    const { data, error } = await query;
+
+    if (!error) {
+      return data;
+    } else {
+      console.error('Error fetching:', error);
+    }
+
+  }
+ const handleOpenScheduleChange = async (scheduleDate: Date) => {
+    console.log('scheduleDate: ', scheduleDate);
+    const data = await fetchSchedule(scheduleDate);
+    setScheduleDetails(data || []);
+  }
 
   if (view !== 'month') return null;
 
@@ -354,42 +406,76 @@ const CalendarMonthView = () => {
           );
 
           return (
-            <div
-              className={cn(
-                'text-left ring-1 p-2 text-sm text-muted-foreground ring-border overflow-auto',
-                !isSameMonth(date, _date) && 'text-muted-foreground/50'
-              )}
-              key={_date.toString()}
-            >
-              <span
-                className={cn(
-                  'size-6 grid place-items-center rounded-full mb-1 sticky top-0',
-                  isToday(_date) && 'bg-primary text-primary-foreground'
-                )}
-              >
-                {format(_date, 'd')}
-              </span>
-
-              {currentEvents.map((event) => {
-                return (
-                  <div
-                    key={event.id}
-                    className="px-1 rounded text-sm flex items-center gap-1"
+            <Dialog
+              key={_date.toString()}>
+              <DialogTrigger asChild>
+                <div
+                  onClick={() => handleOpenScheduleChange(_date)}
+                  className={cn(
+                    'calendarCell text-left ring-1 p-2 text-sm text-muted-foreground ring-border overflow-auto',
+                    !isSameMonth(date, _date) && 'text-muted-foreground/50'
+                  )}
+                  key={_date.toString()}
+                >
+                  <span
+                    className={cn(
+                      'calendarDay size-6 grid place-items-center rounded-full mb-1 sticky top-0',
+                      isToday(_date) && 'bg-primary text-primary-foreground'
+                    )}
                   >
-                    {/* <div
-                      className={cn(
-                        'shrink-0',
-                        monthEventVariants({ variant: event.color })
-                      )}
-                    ></div> */}
-                    <span className="flex-1 text-center truncate">{event.title}</span>
-                    {/* <time className="tabular-nums text-muted-foreground/50 text-xs">
-                      {format(event.start, 'HH:mm')}
-                    </time> */}
-                  </div>
-                );
-              })}
-            </div>
+                    {format(_date, 'd')}
+                  </span>
+
+                  {currentEvents.map((event) => {
+                    return (
+                      <div
+                        key={event.id}
+                        className="assignedNameContainer px-1 rounded text-sm flex items-center gap-1"
+                      >
+                        {/* <div
+                          className={cn(
+                            'shrink-0',
+                            monthEventVariants({ variant: event.color })
+                          )}
+                        ></div> */}
+                        <span className="assignedName flex-1 text-center truncate">{event.title}</span>
+                        {/* <time className="tabular-nums text-muted-foreground/50 text-xs">
+                          {format(event.start, 'HH:mm')}
+                        </time> */}
+                      </div>
+                    );
+                  })}
+                </div>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>{format(_date, 'PPP')}</DialogTitle>
+                  <DialogDescription></DialogDescription>
+                </DialogHeader>
+
+                <div className="py-4 grid grid-cols-2">
+                  {scheduleDetails.map((schedule => (
+                    <div
+                      key={schedule.schedule_id}
+                    >
+
+                      <div className='flex flex-col w-full p-4'>
+                        <span className="text-xl tracking-tight"> {schedule?.name} </span>
+                        <span className='text-sm'> {schedule?.event_name}   </span>
+                      </div>
+
+                      <hr className='text-gray-500 dark:text-gray-400'></hr>
+                    
+                    </div>
+                  )))}
+                </div>
+                
+                <DialogFooter>
+                  {/* <Button variant="outline" className="">Cancel</Button> */}
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+            
           );
         })}
       </div>
