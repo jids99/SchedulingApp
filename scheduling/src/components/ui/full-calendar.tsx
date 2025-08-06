@@ -17,7 +17,6 @@ import {
   isSameHour,
   isSameMonth,
   isToday,
-  parse,
   setHours,
   setMonth,
   startOfMonth,
@@ -34,7 +33,6 @@ import {
   forwardRef,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
   useState,
 } from 'react';
@@ -347,15 +345,6 @@ const CalendarWeekView = () => {
     </div>
   );
 };
-
-const options: Intl.DateTimeFormatOptions = {
-  timeZone: "Asia/Manila",
-  year: "numeric",
-  month: "2-digit",
-  day: "2-digit",
-};
-
-const formatDate = (localDate : string) => new Date(localDate).toLocaleDateString("en-PH", options);
 
 const CalendarMonthView = () => {
   const { date, view, events, locale } = useCalendar();
