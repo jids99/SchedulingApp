@@ -405,39 +405,49 @@ const CalendarMonthView = () => {
                 <div
                   onClick={() => handleOpenScheduleChange(_date)}
                   className={cn(
-                    'calendarCell text-left ring-1 p-2 text-sm text-muted-foreground ring-border overflow-auto',
+                    'calendarCell text-left ring-1 p-2 text-sm text-muted-foreground ring-border overflow-auto scrollbar-hide',
+                    new Date() < _date ? 'opacity-100' : 'opacity-25',
                     !isSameMonth(date, _date) && 'text-muted-foreground/50'
                   )}
                   key={_date.toString()}
                 >
                   <span
                     className={cn(
-                      'calendarDay size-6 grid place-items-center rounded-full mb-1 sticky top-0',
+                      'calendarDay size-6 grid place-items-center rounded-full mb-1 sticky top-0 ',
                       isToday(_date) && 'bg-primary text-primary-foreground'
                     )}
                   >
                     {format(_date, 'd')}
                   </span>
 
-                  {currentEvents.map((event) => {
-                    return (
-                      <div
-                        key={event.id}
-                        className="assignedNameContainer px-1 rounded text-sm flex items-center gap-1"
-                      >
-                        {/* <div
-                          className={cn(
-                            'shrink-0',
-                            monthEventVariants({ variant: event.color })
-                          )}
-                        ></div> */}
-                        <span className="assignedName flex-1 text-center truncate">{event.title}</span>
-                        {/* <time className="tabular-nums text-muted-foreground/50 text-xs">
-                          {format(event.start, 'HH:mm')}
-                        </time> */}
-                      </div>
-                    );
-                  })}
+                  <div className='p-1'>
+                    {currentEvents.map((event) => {
+                      const title = event.title.split(":");
+                      const eventName = title[0]; 
+                      const assignedName = title[1]; 
+                      return (
+                        <div
+                          key={event.id}
+                          className="assignedNameContainer rounded flex px-2 py-[.15rem] bg-zinc-500 text-white m-1"
+                        >
+                          {/* <div
+                            className={cn(
+                              'shrink-0',
+                              monthEventVariants({ variant: event.color })
+                            )}
+                          ></div> */}
+                          <span className="assignedName flex flex-row items-center justify-between truncate w-full">
+                            <span className='text-xs'> {assignedName} </span>
+                            <span className='text-xs opacity-50'>{eventName.toUpperCase()} </span>
+                          </span>
+                          {/* <time className="tabular-nums text-muted-foreground/50 text-xs">
+                            {format(event.start, 'HH:mm')}
+                          </time> */}
+                        </div>
+                      );
+                    })}
+                  </div>
+
                 </div>
               </DialogTrigger>
               <DialogContent>

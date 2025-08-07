@@ -139,12 +139,12 @@ export default function App() {
       const data  = await fetchSchedules() as Schedule[];
       setSchedules(data || []);
 
-      const x = data.map(({ schedule_id, name, schedule_date }) => (
+      const x = data.map(({ schedule_id, name, event_name, schedule_date }) => (
         { 
           id: String(schedule_id), 
           start: new Date(schedule_date),
           end: new Date(schedule_date),
-          title: name,
+          title: (event_name == 'Women2Women' ? 'W2W': event_name) + ": " + name,
         }
       ));
       setSelected([...x]);
