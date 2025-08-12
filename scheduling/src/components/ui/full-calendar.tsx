@@ -13,7 +13,6 @@ import {
   differenceInMinutes,
   format,
   getMonth,
-  isDate,
   isSameDay,
   isSameHour,
   isSameMonth,
@@ -353,8 +352,6 @@ const options: Intl.DateTimeFormatOptions = {
   month: "2-digit",
   day: "2-digit",
 };
-
-const formatDate = (localDate : any) => new Date(localDate).toLocaleDateString("en-PH", options);
 
 const CalendarMonthView = () => {
   const { date, view, events, locale } = useCalendar();
