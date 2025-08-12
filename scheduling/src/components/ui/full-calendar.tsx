@@ -13,6 +13,7 @@ import {
   differenceInMinutes,
   format,
   getMonth,
+  isDate,
   isSameDay,
   isSameHour,
   isSameMonth,
@@ -346,6 +347,15 @@ const CalendarWeekView = () => {
   );
 };
 
+const options: Intl.DateTimeFormatOptions = {
+  timeZone: "Asia/Manila",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+};
+
+const formatDate = (localDate : any) => new Date(localDate).toLocaleDateString("en-PH", options);
+
 const CalendarMonthView = () => {
   const { date, view, events, locale } = useCalendar();
 
@@ -398,6 +408,10 @@ const CalendarMonthView = () => {
             isSameDay(event.start, _date)
           );
 
+          const formatted = _date.toLocaleDateString("en-PH", options);
+          const today = new Date();
+          const isDateOver = today < new Date(formatted);
+
           return (
             <Dialog
               key={_date.toString()}>
@@ -406,7 +420,7 @@ const CalendarMonthView = () => {
                   onClick={() => handleOpenScheduleChange(_date)}
                   className={cn(
                     'calendarCell text-left ring-1 p-2 text-sm text-muted-foreground ring-border overflow-auto scrollbar-hide',
-                    new Date() < _date ? 'opacity-100' : 'opacity-25',
+                    isDateOver ? 'opacity-100' : 'opacity-25',
                     !isSameMonth(date, _date) && 'text-muted-foreground/50'
                   )}
                   key={_date.toString()}

@@ -89,8 +89,9 @@ export default function App() {
 
   const [viewEdit, setViewEdit] = useState<1 | 2>(1)
 
-  const [scheduleFilters, setScheduleFilters] = useState({assigned_name: "", event_name: ""});
-  const [filterCallback, setFilterCallback] = useState({assigned_name: "", event_name: ""});
+  const [scheduleFilters, setScheduleFilters] = useState({assigned_name: "", event_name: "", show_all: false});
+  const [filterCallback, setFilterCallback] = useState({assigned_name: "", event_name: "", show_all: false});
+  const [showAll, setShowAll] = useState(false);
 
   const [openModalAdd, setOpenModalAdd] = useState(false);
   const [openModalEdit, setOpenModalEdit] = useState(false);
@@ -115,6 +116,7 @@ export default function App() {
     const hasNameFilter = scheduleFilters.assigned_name.length > 0;
     const hasEventFilter = scheduleFilters.event_name.length > 0;
     const hasAllFilters = hasNameFilter && hasEventFilter;
+    setShowAll(scheduleFilters.show_all);
 
     if(hasAllFilters) {
       query = supabase.rpc('get_user_event_schedules', { assigned: scheduleFilters.assigned_name, eventname: scheduleFilters.event_name });
@@ -123,6 +125,7 @@ export default function App() {
     } else if(hasEventFilter){
       query = supabase.rpc('get_event_schedules', { eventname: scheduleFilters.event_name });
     }
+
 
     const { data, error } = await query;
 
@@ -158,16 +161,20 @@ export default function App() {
 
   ///////////////////// FILTERING ///////////////////// 
 
-  const handleFilter = (filters: {assigned_name: string, event_name: string}) => {
+  const handleFilter = (filters: {assigned_name: string, event_name: string, show_all: boolean}) => {
     setScheduleFilters(filters);
     setFilterCallback(filters);
-
   }
 
-  const filteredData = schedules.filter(schedule =>
-    schedule.name.toLowerCase().includes(scheduleFilters.assigned_name.toLowerCase())
-  )
-
+  const filteredData = showAll
+    ? schedules
+    : schedules.filter(schedule => {
+      const formatted = new Date(schedule.schedule_date).toLocaleDateString("en-PH", options);
+      const today = new Date();
+      const isDateOver = today < new Date(formatted);
+      return isDateOver 
+    })
+    ;
   ///////////////////// SORTING ///////////////////// 
 
   const [sortBy, setSortBy] = useState<keyof Schedule | null>(null)

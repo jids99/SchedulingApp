@@ -24,13 +24,17 @@ import {
 } from "@/components/ui/select";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faFilterCircleXmark } from "@fortawesome/free-solid-svg-icons"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Label } from "@/components/ui/label"
 
 type FormValues = z.infer<typeof formSchema>
 const formSchema = z.object({
     name: z
         .string(),
     eventName: z
-        .string()
+        .string(),
+    show_all: z
+        .boolean()
 })
 
 const events = [
@@ -64,14 +68,15 @@ const names = [
 ];
 
 const FilterSchedule = ({ onAddSuccess, handleFilter, filter }: 
-                        { handleFilter: (filters: {assigned_name: string, event_name: string}) => void, 
-                            filter: {assigned_name: string, event_name: string}, 
+                        { handleFilter: (filters: {assigned_name: string, event_name: string, show_all: boolean}) => void, 
+                            filter: {assigned_name: string, event_name: string, show_all: boolean}, 
                             onAddSuccess: () => void }) => {
 
     const clearFilters = () => {
         form.reset({
             name: "Choose Assigned",
             eventName: "Choose Event",
+            show_all: false,
         });
     };
     
@@ -80,6 +85,7 @@ const FilterSchedule = ({ onAddSuccess, handleFilter, filter }:
         defaultValues: {
         name: filter.assigned_name,
         eventName: filter.event_name,
+        show_all: filter.show_all,
         },
     })
 
@@ -87,6 +93,7 @@ const FilterSchedule = ({ onAddSuccess, handleFilter, filter }:
         handleFilter({
             assigned_name: values.name,
             event_name: values.eventName,
+            show_all: values.show_all
         })
         onAddSuccess();
     }
@@ -167,6 +174,44 @@ const FilterSchedule = ({ onAddSuccess, handleFilter, filter }:
                                 ))}
                             </SelectContent>
                         </Select>
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+
+                <FormField
+                control={form.control}
+                name="show_all"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormControl>
+                        <Label className="hover:bg-accent/50 flex items-start gap-3 rounded-lg border p-3 
+                                        has-[[aria-checked=true]]:border-blue-600 
+                                        has-[[aria-checked=true]]:bg-blue-50 
+                                        dark:has-[[aria-checked=true]]:border-blue-900 
+                                        dark:has-[[aria-checked=true]]:bg-blue-950"
+                        >
+                            <Checkbox
+                            id="toggle-2"
+                            // defaultChecked
+                            checked={field.value || false}
+                            onCheckedChange={(val) => field.onChange(val === true)}
+                            className="data-[state=checked]:border-blue-600 
+                                        data-[state=checked]:bg-blue-600 
+                                        data-[state=checked]:text-white 
+                                        dark:data-[state=checked]:border-blue-700 
+                                        dark:data-[state=checked]:bg-blue-700"
+                            />
+                            <div className="grid gap-1.5 font-normal">
+                            <p className="text-sm leading-none font-medium">
+                                Show All
+                            </p>
+                            <p className="text-muted-foreground text-sm">
+                                Unhide past schedules automatically hidden
+                            </p>
+                            </div>
+                        </Label>
                     </FormControl>
                     <FormMessage />
                     </FormItem>
